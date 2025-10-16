@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Call Buttons (Auto)</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    input { padding: 12px; font-size: 16px; width: 320px; border:1px solid #ccc; border-radius:10px; }
+    .buttons { margin-top: 20px; }
+    a { display:inline-block; margin:6px; padding:12px 20px; border-radius:20px; text-decoration:none; font-weight:bold; color:white; }
+    .phone { background:#34a853; } .facetime { background:#0b8043; }
+    .whatsapp { background:#25d366; } .viber { background:#665cac; } .zalo { background:#0068ff; }
+    .hint { color:#666; font-size:14px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h2>Generate Call Buttons (Auto)</h2>
+  <input id="phone" type="text" placeholder="Nhập số: 017142326945, 0912345678, +16266881407" autocomplete="off" oninput="render(this.value)" />
+  <div class="hint">Quy tắc: 10 số VN → +84..., từ 11 số trở lên bắt đầu 0 → đổi 0 thành +</div>
+
+  <div id="buttons" class="buttons"></div>
+
+  <script>
+    function normalizeNumber(num) {
+      num = (num || "").trim();
+      if (!num) return "";
+      if (num.charAt(0) === "+") return num;
+
+      // 10 số bắt đầu 0 → VN
+      if (/^0\d{9}$/.test(num)) return "+84" + num.slice(1);
+
+      // 11+ số bắt đầu 0 → đổi 0 thành +
+      if (/^0\d{10,}$/.test(num)) return "+" + num.slice(1);
+
+      return num;
+    }
+
+    function render(raw) {
+      var box = document.getElementById("buttons");
+      var normalized = normalizeNumber(raw);
+      if (!normalized) { box.innerHTML = ""; return; }
+
+      var clean = normalized.replace("+", "");
+
+      // Xoá nội dung cũ
+      box.innerHTML = "";
+
+      // Hiển thị số chuẩn hoá
+      var p = document.createElement("p");
+      p.innerHTML = "<b>Số chuẩn hóa:</b> " + normalized;
+      box.appendChild(p);
+
+      // Helper tạo <a>
+      function link(text, href, cls, newTab) {
+        var a = document.createElement("a");
+        a.className = cls;
+        a.href = href;
+        a.textContent = text;
+        if (newTab) { a.target = "_blank"; a.rel = "noopener"; }
+        box.appendChild(a);
+      }
+
+      link("📞 Phone", "tel:" + normalized, "phone", false);
+      link("🎧 FaceTime", "facetime-audio:" + normalized, "facetime", false);
+      link("💬 WhatsApp", "https://wa.me/" + clean, "whatsapp", true);
+      link("📲 Viber", "viber://chat?number=%2B" + clean, "viber", false);
+      link("🟦 Zalo", "https://zalo.me/" + clean, "zalo", true);
+    }
+  </script>
+</body>
+</html>
