@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Call Buttons (Auto)</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
@@ -15,7 +15,11 @@
 </head>
 <body>
   <h2>Generate Call Buttons (Auto)</h2>
-  <input id="phone" type="text" placeholder="Nhập SĐT" autocomplete="off" oninput="render(this.value)" />
+  <input id="phone" type="text"
+         placeholder="Nhập số: 017142326945, 0912345678, +16266881407"
+         autocomplete="off"
+         oninput="render(this.value)" />
+  <div class="hint">Quy tắc: 10 số VN → +84..., từ 11 số trở lên nếu bắt đầu bằng 0 → thay 0 đầu thành dấu +</div>
 
   <div id="buttons" class="buttons"></div>
 
@@ -23,25 +27,35 @@
     function normalizeNumber(num) {
       num = (num || "").trim();
       if (!num) return "";
-      if (num.charAt(0) === "+") return num;
 
-      // 10 số bắt đầu 0 → VN
-      if (/^0\d{9}$/.test(num)) return "+84" + num.slice(1);
+      // Giữ nguyên nếu đã có dấu +
+      if (num.startsWith("+")) return num;
 
-      // 11+ số bắt đầu 0 → đổi 0 thành +
-      if (/^0\d{10,}$/.test(num)) return "+" + num.slice(1);
+      // 10 chữ số và bắt đầu bằng 0 → +84 + phần còn lại (Việt Nam)
+      if (/^0\d{9}$/.test(num)) {
+        return "+84" + num.slice(1);
+      }
 
+      // TỪ 11 chữ số TRỞ LÊN và BẮT ĐẦU BẰNG 0 → thay '0' đầu bằng '+'
+      // Ví dụ: 01234567890 → +1234567890  (chỉ thay 0 đầu bằng '+', KHÔNG thêm '1' nào)
+      if (/^0\d{10,}$/.test(num)) {
+        return "+" + num.slice(1);
+      }
+
+      // Còn lại giữ nguyên (vd: 84123456789, 10123456789, …)
       return num;
     }
 
     function render(raw) {
       var box = document.getElementById("buttons");
       var normalized = normalizeNumber(raw);
-      if (!normalized) return;  // không xoá kết quả cũ khi input rỗng
+
+      // KHÔNG xoá kết quả cũ khi input rỗng
+      if (!normalized) return;
 
       var clean = normalized.replace("+", "");
 
-      // Xoá nội dung cũ
+      // Mỗi lần render mới → thay nội dung (theo logic gốc)
       box.innerHTML = "";
 
       // Hiển thị số chuẩn hoá
@@ -66,7 +80,7 @@
       link("🟦 Zalo", "https://zalo.me/" + clean, "zalo", true);
     }
 
-    // Xoá input khi click vào bất kỳ nút gọi nào
+    // Xoá input khi click vào bất kỳ nút gọi nào, nhưng vẫn giữ kết quả bên dưới
     (function () {
       var buttons = document.getElementById("buttons");
       if (!buttons) return;
@@ -77,6 +91,7 @@
         if (!input) return;
         setTimeout(function () {
           input.value = "";
+          // Gửi sự kiện input để render("") nhưng hàm sẽ return, không xoá kết quả
           input.dispatchEvent(new Event("input", { bubbles: true }));
         }, 0);
       });
