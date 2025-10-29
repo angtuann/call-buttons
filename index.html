@@ -38,7 +38,7 @@
     function render(raw) {
       var box = document.getElementById("buttons");
       var normalized = normalizeNumber(raw);
-      if (!normalized) return;  // ❌ không xoá kết quả cũ nữa
+      if (!normalized) return;  // không xoá kết quả cũ khi input rỗng
 
       var clean = normalized.replace("+", "");
 
@@ -67,14 +67,21 @@
       link("🟦 Zalo", "https://zalo.me/" + clean, "zalo", true);
     }
 
-    // ✅ Bắt Enter để xoá input nhưng vẫn giữ kết quả
-    document.getElementById("phone").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        render(this.value);  // render số đang nhập
-        this.value = "";     // xoá ô input
-      }
-    });
+    // Xoá input khi click vào bất kỳ nút gọi nào
+    (function () {
+      var buttons = document.getElementById("buttons");
+      if (!buttons) return;
+      buttons.addEventListener("click", function (e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var input = document.getElementById("phone");
+        if (!input) return;
+        setTimeout(function () {
+          input.value = "";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }, 0);
+      });
+    })();
   </script>
 </body>
 </html>
