@@ -2,100 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Call Buttons (Auto)</title>
+  <title>Call</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-    input { padding: 12px; font-size: 16px; width: 320px; border:1px solid #ccc; border-radius:10px; }
-    .buttons { margin-top: 20px; }
-    a { display:inline-block; margin:6px; padding:12px 20px; border-radius:20px; text-decoration:none; font-weight:bold; color:white; }
-    .phone { background:#34a853; } .facetime { background:#0b8043; }
-    .whatsapp { background:#25d366; } .viber { background:#665cac; } .zalo { background:#0068ff; }
-    .hint { color:#666; font-size:14px; margin-top:8px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #fff;
+    }
+
+    .wrap {
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+
+    .buttons {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    a {
+      padding: 10px 18px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: bold;
+      color: white;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .phone { background:#34a853; }
+    .facetime { background:#0b8043; }
+
+    /* Tự co kích thước khi cửa sổ nhỏ */
+    @media (max-width: 360px) {
+      a {
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+      input {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>Generate Call Buttons (Auto)</h2>
-  <input id="phone" type="text"
-         placeholder="Nhập số: 017142326945, 0912345678, +16266881407"
-         autocomplete="off"
-         oninput="render(this.value)" />
-  <div class="hint">Quy tắc: 10 số VN → +84..., từ 11 số trở lên nếu bắt đầu bằng 0 → thay 0 đầu thành dấu +</div>
 
-  <div id="buttons" class="buttons"></div>
+  <div class="wrap">
+    <input id="phone" type="text"
+           placeholder="Nhập số"
+           autocomplete="off"
+           oninput="render(this.value)" />
+
+    <div id="buttons" class="buttons"></div>
+  </div>
 
   <script>
     function normalizeNumber(num) {
       num = (num || "").trim();
       if (!num) return "";
 
-      // Giữ nguyên nếu đã có dấu +
       if (num.startsWith("+")) return num;
-
-      // 10 chữ số và bắt đầu bằng 0 → +84 + phần còn lại (Việt Nam)
-      if (/^0\d{9}$/.test(num)) {
-        return "+84" + num.slice(1);
-      }
-
-      // TỪ 11 chữ số TRỞ LÊN và BẮT ĐẦU BẰNG 0 → thay '0' đầu bằng '+'
-      // Ví dụ: 01234567890 → +1234567890  (chỉ thay 0 đầu bằng '+', KHÔNG thêm '1' nào)
-      if (/^0\d{10,}$/.test(num)) {
-        return "+" + num.slice(1);
-      }
-
-      // Còn lại giữ nguyên (vd: 84123456789, 10123456789, …)
+      if (/^0\d{9}$/.test(num)) return "+84" + num.slice(1);
+      if (/^0\d{10,}$/.test(num)) return "+" + num.slice(1);
       return num;
     }
 
     function render(raw) {
       var box = document.getElementById("buttons");
       var normalized = normalizeNumber(raw);
+      if (!normalized) {
+        box.innerHTML = "";
+        return;
+      }
 
-      // KHÔNG xoá kết quả cũ khi input rỗng
-      if (!normalized) return;
-
-      var clean = normalized.replace("+", "");
-
-      // Mỗi lần render mới → thay nội dung (theo logic gốc)
       box.innerHTML = "";
 
-      // Hiển thị số chuẩn hoá
-      var p = document.createElement("p");
-      p.innerHTML = "<b>Số chuẩn hóa:</b> " + normalized;
-      box.appendChild(p);
-
-      // Helper tạo <a>
-      function link(text, href, cls, newTab) {
+      function link(text, href, cls) {
         var a = document.createElement("a");
         a.className = cls;
         a.href = href;
         a.textContent = text;
-        if (newTab) { a.target = "_blank"; a.rel = "noopener"; }
         box.appendChild(a);
       }
 
-      link("📞 Phone", "tel:" + normalized, "phone", false);
-      link("🎧 FaceTime", "facetime-audio:" + normalized, "facetime", false);
-      link("💬 WhatsApp", "https://wa.me/" + clean, "whatsapp", true);
-      link("📲 Viber", "viber://chat?number=%2B" + clean, "viber", false);
-      link("🟦 Zalo", "https://zalo.me/" + clean, "zalo", true);
+      link("Phone", "tel:" + normalized, "phone");
+      link("FaceTime", "facetime-audio:" + normalized, "facetime");
     }
-
-    // Xoá input khi click vào bất kỳ nút gọi nào, nhưng vẫn giữ kết quả bên dưới
-    (function () {
-      var buttons = document.getElementById("buttons");
-      if (!buttons) return;
-      buttons.addEventListener("click", function (e) {
-        var a = e.target.closest('a');
-        if (!a) return;
-        var input = document.getElementById("phone");
-        if (!input) return;
-        setTimeout(function () {
-          input.value = "";
-          // Gửi sự kiện input để render("") nhưng hàm sẽ return, không xoá kết quả
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-        }, 0);
-      });
-    })();
   </script>
+
 </body>
 </html>
